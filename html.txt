@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeDesk - Personal Agent</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --sidebar-bg: #1a1a1a;
+            --chat-bg: #2d2d2d;
+            --accent: #007bff;
+            --text-main: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar styling for system status */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            padding: 20px;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 { margin-top: 0; font-size: 1.2rem; font-weight: 600; }
+        
+        .status-container { margin-top: 30px; }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            box-shadow: 0 0 8px #4caf50;
+        }
+        .indicator.offline { background: #f44336; box-shadow: 0 0 8px #f44336; }
+
+        /* Chat Window styling */
+        .main-chat {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-color);
+        }
+
+        .messages-area {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            background-color: var(--accent);
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.agent {
+            background-color: var(--chat-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #3d3d3d;
+        }
+
+        /* Input Area styling */
+        .input-area {
+            padding: 20px 30px;
+            background: var(--sidebar-bg);
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid #333;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 14px 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #252525;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus { border-color: var(--accent); }
+
+        button {
+            padding: 14px 28px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #0056b3; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar / System Status -->
+    <div class="sidebar">
+        <h2>LifeDesk OS</h2>
+        <div class="status-container">
+            <div class="status-item">
+                <div class="indicator"></div>
+                JS Orchestrator (Node)
+            </div>
+            <div class="status-item">
+                <div class="indicator"></div>
+                Memory Engine (C-Core)
+            </div>
+            <div class="status-item">
+                <div class="indicator offline"></div>
+                LLM API Connection
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Interface -->
+    <div class="main-chat">
+        <div class="messages-area" id="chatHistory">
+            <div class="message agent">
+                Hello. LifeDesk is online. What do you need help with today?
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Type a problem, task, or expense..." autocomplete="off">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Frontend Logic to handle UI interactions
+        const chatHistory = document.getElementById('chatHistory');
+        const userInput = document.getElementById('userInput');
+
+        // Allow sending message with Enter key
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.textContent = text;
+            chatHistory.appendChild(msgDiv);
+            
+            // Auto-scroll to the newest message
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // 1. Display User Message
+            appendMessage(text, 'user');
+            userInput.value = '';
+
+            // 2. Simulate Agent Processing Delay
+            setTimeout(() => {
+                // In a real application, you would make an HTTP request here:
+                // fetch('http://localhost:3000/api/chat', { method: 'POST', body: JSON.stringify({ message: text }) })
+                
+                let simulatedResponse = "";
+                
+                if (text.toLowerCase().includes("printer")) {
+                    simulatedResponse = "I see you're dealing with a printer issue. The last time this happened, your successful fix was: 'Restart the router and reconnect via IP 192.168.1.15'.";
+                } else if (text.toLowerCase().includes("expense")) {
+                    simulatedResponse = "Expense successfully categorized and queued for the local ledger.";
+                } else {
+                    simulatedResponse = "Processing new task. Generating a novel solution...";
+                }
+
+                // 3. Display Agent Response
+                appendMessage(simulatedResponse, 'agent');
+            }, 800);
+        }
+    </script>
+</body>
+</html>
