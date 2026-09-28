@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Categories LifeDesk needs to track
+typedef enum { PROBLEM, PREFERENCE, TASK, DEVICE, EXPENSE, DOC } RecordType;
+
+// Self-referential structure for LifeDesk Memory
+typedef struct MemoryNode {
+    int id;
+    RecordType type;
+    char key[100];
+    char value[256];
+    struct MemoryNode* next;
+} MemoryNode;
+
+MemoryNode* head = NULL;
+int counter = 1;
+
+// Add a new memory record to the linked list
+void addMemory(RecordType type, const char* key, const char* value) {
+    MemoryNode* newNode = (MemoryNode*)malloc(sizeof(MemoryNode));
+    newNode->id = counter++;
+    newNode->type = type;
+    strcpy(newNode->key, key);
+    strcpy(newNode->value, value);
+    
+    // Insert at the beginning (LIFO) for fastest access to recent memories
+    newNode->next = head;
+    head = newNode;
+    printf("[LifeDesk C-Core] Logged: %s\n", key);
+}
+
+// Search past solutions by keyword
+void searchMemory(const char* searchKey) {
+    MemoryNode* current = head;
+    printf("\n--- Memory Search: '%s' ---\n", searchKey);
+    int found = 0;
+    
+    while (current != NULL) {
+        if (strstr(current->key, searchKey) != NULL) {
+            printf("Found Record %d: %s\n", current->id, current->value);
+            found = 1;
+        }
+        current = current->next;
+    }
+    
+    if (!found) printf("No previous history found.\n");
+    printf("------------------------------------\n");
+}
+
+int main() {
+    // Simulating the agent storing recurring issues and preferences
+    addMemory(DEVICE, "Printer Error 404", "Restart the router and reconnect via IP 192.168.1.15");
+    addMemory(PREFERENCE, "Work hours", "Do not schedule heavy tasks after 7 PM");
+    addMemory(EXPENSE, "Software Subs", "GitHub Copilot: $10/month");
+
+    // Simulating a memory retrieval trigger from the JS Orchestrator
+    searchMemory("Printer");
+    searchMemory("Work");
+
+    return 0;
+}

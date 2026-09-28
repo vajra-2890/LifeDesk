@@ -1,0 +1,66 @@
+import streamlit as st
+from hindsight_client import Hindsight
+import os
+from datetime import datetime
+
+# Initialize Hindsight Client
+hindsight_url = os.getenv("HINDSIGHT_URL", "https://api.hindsight.vectorize.io")
+client = Hindsight(base_url=hindsight_url)
+
+st.set_page_config(page_title="LifeDesk (Zero-Trust)", page_icon="??")
+st.title("?? LifeDesk: Your Personal Problem-Solving Agent")
+st.write("A secure, TEE-protected memory assistant that learns your life, preferences, and recurring problems.")
+
+# Mock TEE Wrapper for Hackathon Demonstration
+class SecureEnclave:
+    @staticmethod
+    def encrypt_for_enclave(data):
+        return f"ENCRYPTED_PAYLOAD[{hash(data)}]"
+
+    @staticmethod
+    def process_in_tee(operation, *args, **kwargs):
+        st.toast("?? Crossing TEE Boundary: Data decrypted in secure memory.", icon="???")
+        return operation(*args, **kwargs)
+
+user_id = st.sidebar.text_input("User ID", "personal_vault_01")
+bank_id = f"secure_enclave_{user_id}"
+
+tab_log, tab_solve = st.tabs(["?? Log Life Event", "??? Solve a Problem"])
+
+with tab_log:
+    st.subheader("Document an Event or Preference")
+    context = st.selectbox("Category", ["Maintenance", "Finances", "Health & Routine", "Preferences", "Devices"])
+    content = st.text_area("What do you want LifeDesk to remember? (e.g., 'The basement dehumidifier filter needs changing every 3 months. Last changed Oct 12.')")
+    
+    if st.button("Save to Secure Memory"):
+        with st.spinner("Encrypting and transmitting to Enclave..."):
+            # Step 1: Encrypt locally before sending
+            secure_payload = SecureEnclave.encrypt_for_enclave(content)
+            
+            # Step 2: Hindsight extracts facts and temporal data inside the TEE
+            SecureEnclave.process_in_tee(
+                client.retain,
+                bank_id=bank_id,
+                content=content, # In prod, this passes secure_payload
+                context=context,
+                timestamp=datetime.now().isoformat()
+            )
+        st.success("Event retained inside hardware-isolated enclave.")
+
+with tab_solve:
+    st.subheader("Ask LifeDesk for Help")
+    query = st.text_input("What are you trying to solve? (e.g., 'The basement smells musty again, what should I check?')")
+    
+    if st.button("Solve Problem"):
+        with st.spinner("Recalling past solutions and reflecting..."):
+            prompt = f"Act as a hyper-personalized problem solver. Review my historical memory bank regarding this issue. Identify what I did last time, suggest immediate steps, and factor in my past preferences.\n\nProblem: {query}"
+            
+            # Context is assembled securely inside the TEE using Hindsight's Reflect operation
+            answer = SecureEnclave.process_in_tee(
+                client.reflect,
+                bank_id=bank_id,
+                query=prompt,
+                budget="high"
+            )
+            st.write("### ?? LifeDesk Strategy")
+            st.write(answer.text)

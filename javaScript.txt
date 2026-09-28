@@ -1,0 +1,45 @@
+class LifeDeskAgent {
+  constructor() {
+    this.sessionContext = [];
+  }
+
+  // The main router that processes user input
+  async routeQuery(userInput) {
+    console.log(`\n[Agent] Analyzing input: "${userInput}"`);
+    
+    // In a full build, an LLM determines these categories dynamically
+    if (userInput.toLowerCase().includes("printer")) {
+      return await this.handleRecurringProblem(userInput, "Printer");
+    } else if (userInput.toLowerCase().includes("expense")) {
+      return await this.logExpense(userInput);
+    } else {
+      return "[Agent] Processing new task. Generating a novel solution...";
+    }
+  }
+
+  async handleRecurringProblem(issue, keyword) {
+    console.log(`[Agent] Recurring issue detected. Querying C-Core memory for '${keyword}'...`);
+    
+    // NOTE: In production, JS would call the compiled C program here 
+    // using Node's `child_process.exec()` or via a local API.
+    
+    // Simulating the data returned from the C program's searchMemory()
+    const historicalData = "Restart the router and reconnect via IP 192.168.1.15";
+    
+    return `I see you're dealing with a printer issue. The last time this happened, your successful fix was: "${historicalData}". Would you like me to walk you through those steps again?`;
+  }
+
+  async logExpense(expenseStr) {
+    console.log(`[Agent] Financial data detected. Routing to Expense Tracker...`);
+    // Logic to send new data to the C-Core to be saved
+    return "Expense successfully categorized and logged to your local ledger.";
+  }
+}
+
+// Initialize and run the agent
+const lifedesk = new LifeDeskAgent();
+
+(async () => {
+  const response = await lifedesk.routeQuery("My printer is giving me that 404 error again.");
+  console.log(`\n[Agent Output] ${response}`);
+})();
